@@ -10,7 +10,8 @@
     },
     "dependencies": {
         "axios": "^0.27.2",
-        "nuxt": "3.0.0-rc.3"
+        "nuxt": "3.0.0-rc.3",
+        "xml2js": "^0.4.23"
     },
     "devDependencies": {
         "@nuxtjs/eslint-config-typescript": "^10.0.0",
