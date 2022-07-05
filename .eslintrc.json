@@ -1,0 +1,44 @@
+{
+    "extends": [
+        "@nuxtjs/eslint-config-typescript",
+        "plugin:nuxt/recommended"
+    ],
+    "ignorePatterns": [ "src/app/*", "src/static/**/*" ],
+    "rules": {
+        "indent": ["error", 4],
+        "semi": ["error", "always"],
+        "vue/script-indent": ["error", 4, { "baseIndent": 1 }],
+        "vue/html-indent": ["error", 4, { "baseIndent": 1 }],
+        "space-before-function-paren": ["error", "always"],
+        "max-len": [
+            "error",
+            {
+                "code": 160,
+                "ignoreStrings": true,
+                "ignoreComments": true,
+                "ignoreTemplateLiterals": true,
+                "ignoreUrls": true,
+                "ignorePattern": ":src=\".*\""
+            }
+        ],
+        "@typescript-eslint/explicit-function-return-type": ["error"],
+        "@typescript-eslint/no-explicit-any": ["error"],
+        "@typescript-eslint/no-unused-vars": ["error", { "args": "none" }],
+        "function-paren-newline": ["off"],
+        "vue/no-v-html": ["off"],
+        "vue/html-self-closing": [
+            "error", {
+                "html": {
+                    "void": "always",
+                    "normal": "always",
+                    "component": "always"
+                },
+                "svg": "always"
+            }
+        ],
+        "vue/singleline-html-element-content-newline": ["off"],
+        "unicorn/prefer-includes": ["off"],
+        "vue/multi-word-component-names": 0
+    },
+    "overrides": [{ "files": ["*.vue"], "rules": { "indent": "off" } }]
+}
