@@ -29,8 +29,8 @@ const getData = async (): Promise<object> => {
                 code: 'gold',
                 rates: response.data.map((el) => {
                     return {
-                        'effectiveDate': el.data,
-                        'mid': el.cena
+                        effectiveDate: el.data,
+                        mid: el.cena
                     };
                 })
             };
