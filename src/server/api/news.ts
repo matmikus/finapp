@@ -6,7 +6,11 @@ const getData = async (): Promise<object> => {
     const urls = [
         'https://www.bankier.pl/rss/waluty.xml',
         'https://www.bankier.pl/rss/wiadomosci.xml',
-        'https://www.bankier.pl/rss/gielda.xml'
+        'https://www.bankier.pl/rss/gielda.xml',
+        'https://biznes.interia.pl/waluty/aktualnosci/feed',
+        'https://biznes.interia.pl/gieldy/aktualnosci/feed',
+        'https://cinkciarz.pl/articles/rss/nowosci/komentarze-walutowe/komentarze-tekstowe',
+        'http://www.pieniadz.pl/rss.xml'
     ];
 
     for (const url of urls) {
