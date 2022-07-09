@@ -23,7 +23,7 @@
         ],
         "@typescript-eslint/explicit-function-return-type": ["error"],
         "@typescript-eslint/no-explicit-any": ["error"],
-        "@typescript-eslint/no-unused-vars": ["error", { "args": "none" }],
+        "@typescript-eslint/no-unused-vars": ["off"],
         "function-paren-newline": ["off"],
         "vue/no-v-html": ["off"],
         "vue/html-self-closing": [
