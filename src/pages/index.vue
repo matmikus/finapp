@@ -39,7 +39,7 @@
                     {{ getNiceDate(item.pubDate[0]) }}
                 </span>
                 <span class="item-title">
-                    <a :href="item.link">
+                    <a :href="item.link[0]">
                         {{ item.title[0] }}
                     </a>
                 </span>
