@@ -1,58 +1,37 @@
 import axios, { AxiosResponse } from 'axios';
 import xml2js from 'xml2js';
 
-const getCurrencies = async (): Promise<object> => {
-    const currencies = [];
-    const urls = [
-        'http://api.nbp.pl/api/exchangerates/rates/a/usd/last/100',
-        'http://api.nbp.pl/api/exchangerates/rates/a/eur/last/100',
-        'http://api.nbp.pl/api/exchangerates/rates/a/gbp/last/100',
-        'http://api.nbp.pl/api/exchangerates/rates/a/chf/last/100',
-        'http://api.nbp.pl/api/exchangerates/rates/a/jpy/last/100',
-        'http://api.nbp.pl/api/exchangerates/rates/a/cny/last/100'
-    ];
-
-    for (const url of urls) {
-        const data = await axios.get(url)
-            .then((response: AxiosResponse) => {
-                return response.data;
-            }).catch(() => {
-                return {};
-            });
-
-        currencies.push(data);
-    }
-
-    const gold = await axios.get('http://api.nbp.pl/api/cenyzlota/last/100/?format=json')
+const getGold = async (): Promise<object> => {
+    return await axios.get('http://api.nbp.pl/api/cenyzlota/last/90/?format=json')
         .then((response: AxiosResponse) => {
             return {
-                currency: 'złoto',
-                code: 'gold',
-                rates: response.data.map((el) => {
-                    return {
-                        effectiveDate: el.data,
-                        mid: el.cena
-                    };
+                name: 'gold/pln',
+                country: 'pol',
+                type: 'currency',
+                values: response.data.map((el) => {
+                    return el.cena;
                 })
             };
         }).catch(() => {
             return {};
         });
-
-    currencies.push(gold);
-
-    return currencies;
 };
 
 const getIndexes = async (): Promise<object> => {
     const indexes = [
-        { symbol: 'EPOL', name: 'pol' },
-        { symbol: '^FTSE', name: 'gbr' },
-        { symbol: 'EWL', name: 'sui' },
-        { symbol: '^GSPC', name: 'usa' },
-        { symbol: 'FEZ', name: 'eur' },
-        { symbol: '^N225', name: 'jap' },
-        { symbol: '000001.SS', name: 'chn' }
+        { symbol: 'EPOL', name: 'pol', country: 'pol', type: 'index' },
+        { symbol: '^FTSE', name: 'gbr', country: 'gbr', type: 'index' },
+        { symbol: 'EWL', name: 'sui', country: 'sui', type: 'index' },
+        { symbol: '^GSPC', name: 'usa', country: 'usa', type: 'index' },
+        { symbol: 'FEZ', name: 'eur', country: 'eur', type: 'index' },
+        { symbol: '^N225', name: 'jap', country: 'jap', type: 'index' },
+        { symbol: '000001.SS', name: 'chn', country: 'chn', type: 'index' },
+        { symbol: 'PLN=X', name: 'USD/PLN', country: 'usa', type: 'currency' },
+        { symbol: 'GBPPLN=X', name: 'GBP/PLN', country: 'gbr', type: 'currency' },
+        { symbol: 'EURPLN=X', name: 'EUR/PLN', country: 'eur', type: 'currency' },
+        { symbol: 'CHFPLN=X', name: 'CHF/PLN', country: 'sui', type: 'currency' },
+        { symbol: 'JPYPLN=X', name: 'JPY/PLN', country: 'jap', type: 'currency' },
+        { symbol: 'CNYPLN=X', name: 'CNY/PLN', country: 'chn', type: 'currency' }
     ];
 
     const options = {
@@ -71,8 +50,8 @@ const getIndexes = async (): Promise<object> => {
         .then((response: AxiosResponse) => {
             return Object.keys(response.data).map((el) => {
                 return {
-                    values: response.data[el].close,
-                    name: indexes.find(index => index.symbol === el).name
+                    values: response.data[el].close.slice(-90),
+                    ...indexes.find(index => index.symbol === el)
                 };
             });
         }).catch(() => {
@@ -122,9 +101,10 @@ export default defineEventHandler(async () => {
     if (currentTimestamp - 3600000 > lastTimestamp) {
         data = {
             news: await getNews(),
-            currencies: await getCurrencies(),
             indexes: await getIndexes()
         };
+
+        data.indexes.push(await getGold());
         lastTimestamp = currentTimestamp;
     }
 
