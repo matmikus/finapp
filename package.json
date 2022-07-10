@@ -9,6 +9,7 @@
         "stylelint": "npx stylelint \"**/*.{vue,css,scss}\""
     },
     "dependencies": {
+        "@nuxtjs/dayjs": "^1.4.1",
         "axios": "^0.27.2",
         "nuxt": "3.0.0-rc.3",
         "xml2js": "^0.4.23"
