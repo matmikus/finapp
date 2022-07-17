@@ -30,26 +30,21 @@
                 <div :id="`i-${item.name}`" class="ct-chart ct-chart--market" />
             </div>
         </div>
-        <div v-for="(site, index) in news" :key="index" class="news">
-            <div class="site-name">
-                {{ site.title[0] }}
-            </div>
-            <div v-for="(item, index2) in site.items" :key="index2">
-                <span class="item-date">
-                    {{ getNiceDate(item.pubDate[0]) }}
-                </span>
-                <span class="item-title">
-                    <a :href="item.link[0]">
-                        {{ item.title[0] }}
-                    </a>
-                </span>
-                <div class="item-description" v-html="item.description[0]" />
-            </div>
+        <div v-for="(item, index) in news" :key="index" class="news">
+            <span class="news-date">
+                {{ getNiceDate(item.pubDate[0]) }}
+            </span>
+            <span class="news-title">
+                <a :href="item.link[0]" v-html="item.title[0]" />
+            </span>
+            <div class="news-description" v-html="item.description[0]" />
         </div>
     </div>
 </template>
 
 <script lang="ts">
+    import relativeTime from 'dayjs/esm/plugin/relativeTime';
+
     export default {
         async setup (): Promise<object> {
             return await useFetch('/api/all');
@@ -75,7 +70,14 @@
                 });
             },
             news (): Array<object> {
-                return this.data.news;
+                const news = [...this.data.news];
+                news.sort((a, b) => {
+                    return this.$dayjs(a.pubDate[0]).isAfter(this.$dayjs(b.pubDate[0])) ? -1 : 1;
+                });
+
+                return news.filter((item) => {
+                    return this.$dayjs(item.pubDate[0]).isAfter(this.$dayjs().subtract(1, 'week'));
+                });
             }
         },
         mounted (): void {
@@ -121,20 +123,28 @@
         },
         methods: {
             getNiceDate (uglyDate: string): string {
-                return this.$dayjs(uglyDate).format('DD.MM.YYYY');
+                this.$dayjs.extend(relativeTime);
+
+                return this.$dayjs(uglyDate).fromNow();
             }
         }
     };
 </script>
 
 <style lang="scss">
+    body {
+        background-color: #000;
+        color: #fff;
+    }
+
     .table {
-        font-family: 'tahoma';
+        font-family: 'HelveticaNeue', 'tahoma';
         font-size: 20px;
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
         margin: 24px;
+        font-family: Tahoma;
 
         & > * {
             margin: 16px;
@@ -143,7 +153,7 @@
 
     .value {
         font-family: monospace;
-        font-size: 20px;
+        font-size: 22px;
     }
 
     .item {
@@ -165,6 +175,10 @@
         margin-left: 4px;
     }
 
+    .ct-chart--currency {
+        filter: invert(1);
+    }
+
     .ct-chart--market {
         filter: grayscale(1);
     }
@@ -173,17 +187,30 @@
         display: none !important;
     }
 
-    .site-name {
-        font-size: 20px;
-        margin: 24px;
-    }
-
-    .item-title {
-        font-weight: 800;
+    .news-title {
         margin-left: 16px;
+
+        a {
+            font-size: 18px;
+            color: #fff;
+            text-decoration: none;
+        }
     }
 
-    .item-description {
+    .news-description {
         margin: 16px 0;
+        color: darkslategrey;
+    }
+
+    .news-date {
+        font-family: monospace;
+        font-size: 19px;
+        color: darkslategrey;
+    }
+
+    .news {
+        margin-bottom: 8px;
+        padding: 4px;
+        font-family: 'HelveticaNeue', 'tahoma';
     }
 </style>

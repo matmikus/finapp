@@ -69,8 +69,7 @@ const getNews = async (): Promise<object> => {
         'https://www.bankier.pl/rss/gielda.xml',
         'https://biznes.interia.pl/waluty/aktualnosci/feed',
         'https://biznes.interia.pl/gieldy/aktualnosci/feed',
-        'https://cinkciarz.pl/articles/rss/nowosci/komentarze-walutowe/komentarze-tekstowe',
-        'http://www.pieniadz.pl/rss.xml'
+        'https://cinkciarz.pl/articles/rss/nowosci/komentarze-walutowe/komentarze-tekstowe'
     ];
 
     for (const url of urls) {
@@ -78,15 +77,12 @@ const getNews = async (): Promise<object> => {
             .then(async (response: AxiosResponse) => {
                 const data = await xml2js.parseStringPromise(response.data);
 
-                return {
-                    title: data.rss.channel[0].title,
-                    items: data.rss.channel[0].item
-                };
+                return data.rss.channel[0].item;
             }).catch(() => {
                 return {};
             });
 
-        news.push(data);
+        news.push(...data);
     }
 
     return news;
