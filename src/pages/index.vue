@@ -1,33 +1,60 @@
 <template>
     <div>
         <div class="table">
+            <div>
+                <select v-model="selected">
+                    <option v-for="item in currencies" :key="item">
+                        {{ item }}
+                    </option>
+                </select>
+            </div>
             <div v-for="item in chartData" :key="item">
                 <div>
-                    {{ item.currency.name }}
+                    {{ item.name }}
                 </div>
-                <div class="value">
-                    {{ item.currency.values[item.currency.values.length - 1] }}
+                <div v-if="item.values" class="value">
+                    {{ item.values[item.values.length - 1] }}
                 </div>
             </div>
         </div>
         <div v-for="item in chartData" :key="item" class="item">
-            <div v-if="item.currency">
+            <div v-if="item.values">
                 <div>
                     <span class="currency-name">
-                        {{ item.currency.name }}
+                        {{ item.name }}
                     </span>
                     <span class="currency-value">
-                        {{ item.currency.values[item.currency.values.length - 1] }}
+                        {{ item.values[item.values.length - 1] }}
                     </span>
                 </div>
-                <div :id="`c-${item.name}`" class="ct-chart ct-chart--currency" />
+                <div :id="`c-${item.name}`.replace('/', '')" class="ct-chart ct-chart--currency" />
             </div>
-            <div v-if="item.index">
-                <div>
-                    <span class="market-name">rynek</span>
-                    <span class="market-value">{{ item.index.name }}</span>
+            <div class="stats">
+                <div
+                    :class="{ plus: getShift(item.values, 10) > 0, minus: getShift(item.values, 10) < 0 }"
+                >
+                    10D: {{ getShift(item.values, 10).toFixed(2) }}%
                 </div>
-                <div :id="`i-${item.name}`" class="ct-chart ct-chart--market" />
+                <div
+                    :class="{ plus: getShift(item.values, 7) > 0, minus: getShift(item.values, 7) < 0 }"
+                >
+                    7D: {{ getShift(item.values, 7).toFixed(2) }}%
+                </div>
+                <div
+                    :class="{ plus: getShift(item.values, 5) > 0, minus: getShift(item.values, 5) < 0 }"
+                >
+                    5D: {{ getShift(item.values, 5).toFixed(2) }}%
+                </div>
+                <div
+                    :class="{ plus: getShift(item.values, 3) > 0, minus: getShift(item.values, 3) < 0 }"
+                >
+                    3D: {{ getShift(item.values, 3).toFixed(2) }}%
+                </div>
+                <div
+                    :class="{ plus: getShift(item.values, 1) > 0, minus: getShift(item.values, 1) < 0 }"
+                >
+                    1D: {{ getShift(item.values, 1).toFixed(2) }}%
+                </div>
             </div>
         </div>
         <div v-for="(item, index) in news" :key="index" class="news">
@@ -49,28 +76,26 @@
         async setup (): Promise<object> {
             return await useFetch('/api/all');
         },
+        data (): object {
+            return {
+                currencies: [
+                    'pln',
+                    'usd',
+                    'eur',
+                    'gbp',
+                    'chf',
+                    'jpy'
+                ],
+                selected: ''
+            };
+        },
         computed: {
             chartData (): Array<object> {
-                const items = [
-                    'usa',
-                    'eur',
-                    'gbr',
-                    'sui',
-                    'jap',
-                    'chn',
-                    'pol'
-                ];
-
-                return items.map((itemName) => {
-                    return {
-                        name: itemName,
-                        currency: this.data.indexes.find(el => el.country === itemName && el.type === 'currency'),
-                        index: this.data.indexes.find(el => el.country === itemName && el.type === 'index')
-                    };
-                });
+                return this.data.indexes.filter(el => el.currency === this.selected);
             },
             news (): Array<object> {
                 const news = [...this.data.news];
+
                 news.sort((a, b) => {
                     return this.$dayjs(a.pubDate[0]).isAfter(this.$dayjs(b.pubDate[0])) ? -1 : 1;
                 });
@@ -80,52 +105,60 @@
                 });
             }
         },
+        watch: {
+            selected (value: string): void {
+                this.createCharts();
+                window.localStorage.setItem('currency', value);
+            }
+        },
         mounted (): void {
-            const script: HTMLScriptElement = document.createElement('script');
-            script.onload = (): void => {
-                for (const item of this.chartData) {
-                    if (!item.currency || !item.index) {
-                        continue;
-                    }
+            const selected = localStorage.getItem('currency');
 
-                    // eslint-disable-next-line
-                    new Chartist.Line(
-                        `#c-${item.name}`,
-                        { series: [item.currency.values] },
-                        {
-                            showArea: true,
-                            height: '300px'
-                        }
-                    );
+            if (selected !== null) {
+                this.selected = selected;
+            } else {
+                this.selected = this.currencies[0];
+            }
 
-                    // eslint-disable-next-line
-                    new Chartist.Line(
-                        `#i-${item.name}`,
-                        { series: [item.index.values] },
-                        {
-                            showArea: true,
-                            height: '200px'
-                        }
-                    );
-                }
-            };
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/chartist/0.11.4/chartist.min.js';
-            script.async = true;
-
-            document.head.appendChild(script);
-
-            const link: HTMLLinkElement = document.createElement('link');
-            link.href = 'https://cdnjs.cloudflare.com/ajax/libs/chartist/0.11.4/chartist.min.css';
-            link.rel = 'stylesheet';
-            link.type = 'text/css';
-
-            document.head.appendChild(link);
+            this.createCharts();
         },
         methods: {
             getNiceDate (uglyDate: string): string {
                 this.$dayjs.extend(relativeTime);
 
                 return this.$dayjs(uglyDate).fromNow();
+            },
+            createCharts (): void {
+                const script: HTMLScriptElement = document.createElement('script');
+
+                script.onload = (): void => {
+                    for (const item of this.chartData) {
+                        // eslint-disable-next-line
+                        new Chartist.Line(
+                            `#c-${item.name}`.replace('/', ''),
+                            { series: [item.values] },
+                            {
+                                showArea: true,
+                                height: '300px'
+                            }
+                        );
+                    }
+                };
+
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/chartist/0.11.4/chartist.min.js';
+                script.async = true;
+
+                document.head.appendChild(script);
+
+                const link: HTMLLinkElement = document.createElement('link');
+                link.href = 'https://cdnjs.cloudflare.com/ajax/libs/chartist/0.11.4/chartist.min.css';
+                link.rel = 'stylesheet';
+                link.type = 'text/css';
+
+                document.head.appendChild(link);
+            },
+            getShift (dataSet: Array<number>, period: number): number {
+                return (((dataSet[dataSet.length - 1] / dataSet[dataSet.length - 1 - period]) - 1) * 100);
             }
         }
     };
@@ -212,5 +245,29 @@
         margin-bottom: 8px;
         padding: 4px;
         font-family: 'HelveticaNeue', 'tahoma';
+    }
+
+    select {
+        font-size: 20px;
+        text-transform: uppercase;
+        padding: 8px;
+    }
+
+    .stats {
+        display: flex;
+        justify-content: flex-end;
+        margin: -10px 10px 10px;
+
+        div {
+            padding: 8px;
+        }
+    }
+
+    .plus {
+        color: greenyellow;
+    }
+
+    .minus {
+        color: red;
     }
 </style>
