@@ -46,7 +46,7 @@ const getIndexes = async (): Promise<object> => {
             symbols: indexes1.map(el => el.symbol).join(',')
         },
         headers: {
-            'x-api-key': 'ntlES7hLq56hSNleudhcA76SAe7K7u5mvYG8FpOa'
+            'x-api-key': process.env.API_KEY
         }
     };
 
@@ -58,7 +58,7 @@ const getIndexes = async (): Promise<object> => {
             symbols: indexes2.map(el => el.symbol).join(',')
         },
         headers: {
-            'x-api-key': 'ntlES7hLq56hSNleudhcA76SAe7K7u5mvYG8FpOa'
+            'x-api-key': process.env.API_KEY
         }
     };
 
@@ -70,7 +70,8 @@ const getIndexes = async (): Promise<object> => {
                     ...indexes1.find(index => index.symbol === el)
                 };
             });
-        }).catch(() => {
+        }).catch((err) => {
+            console.log(err);
             return [];
         });
 
